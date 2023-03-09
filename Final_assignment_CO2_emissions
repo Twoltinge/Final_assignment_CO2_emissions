@@ -71,12 +71,12 @@ df_agri_out = df_agri_out.rename(columns = {'Entity':'Country',
 df_gni = df_gni.rename(columns = {'Entity':'Country', 
                                   'GNI per capita, PPP (constant 2017 international $)': 'GNI'})
 df_energy_price = df_energy_price.rename(columns = {'Bioenergy levelized cost of energy': 'Bioenergy', 
-                                                    'Geothermal levelized cost of energy': 'Geothermal', 
-                                                    'Offshore wind levelized cost of energy': 'Offshore wind', 
-                                                    'Solar photovoltaic levelized cost of energy': 'Solar photovoltaic', 
+                                                    'Geothermal levelized cost of energy': 'Geothermal energy', 
+                                                    'Offshore wind levelized cost of energy': 'Offshore wind power', 
+                                                    'Solar photovoltaic levelized cost of energy': 'Solar photovoltaic power', 
                                                     'Concentrated solar power levelized cost of energy': 'Concentrated solar power', 
                                                     'Hydropower levelized cost of energy': 'Hydropower', 
-                                                    'Onshore wind levelized cost of energy': 'Onshore wind'})
+                                                    'Onshore wind levelized cost of energy': 'Onshore wind power'})
 
 # Recalculate columns and replace non-default missing values
 df_urban_rural['Total population'] = df_urban_rural['Urban population'] + df_urban_rural['Rural population']
@@ -112,12 +112,11 @@ df_total['Annual CO₂ emissions (kg/py/pc)'] = df_total['Annual CO₂ emissions
 df_total['Renewable kWh/pc'] = (df_total['Renewable TWh'] * 1000000000) / df_total['Population']
 df_total['Nuclear kWh/pc'] = (df_total['Nuclear TWh'] * 1000000000) / df_total['Population']
 df_total['Fossil kWh/pc'] = (df_total['Fossil TWh'] * 1000000000) / df_total['Population']
+print('Dataframe of all data in csv files after renaming and recalculating')
+display(df_total)
 
 #################################### Question 1: What is the biggest predictor of a large CO2 output per capita of a country? #################################
 print(f'############################ Question 1: What is the biggest predictor of a large CO2 output per capita of a country? #################################')
-
-count_countries = df_total.Country.unique().size
-print(f'The number of unique countries in df_total is: {count_countries}')
 
 # List all columns in dataframe and choose which ones to show in new dataframe
 column_list_total = list(df_total.columns.values)
@@ -142,19 +141,24 @@ df_plot = df_total.loc[:, ('Country',
                            'Food supply (kcal/pc/pd)', 
                            'Agricultural land (% of land area)')]
 
-# Check for missing values in df_plot 
-nan_count_total = df_total.isna().sum()
-# print(f'The number of missing values in df_plot is: {nan_count_total}')
-# There are no missing values in the dataframe
+# Check how many unique countries are in the dataframe
+count_countries = df_plot.Country.unique().size
+print(f'The number of unique countries in df_plot is: {count_countries}')
+# Check how many unique years are in the dataframe
 count_years = df_plot.Year.unique().size
-print(f'The number of available years is: {count_years}')
+print(f'The number of available years in df_plot is: {count_years}')
+# Check for missing values in df_plot (there were no missing values in the dataframe)
+# nan_count_plot = df_plot.isna().sum()
+# print(f'The number of missing values in df_plot is: {nan_count_plot}')
+print('\n')
+print('Dataframe with relevant values for analysis of question 1 (df_plot)')
 display(df_plot)
 
-# Make dataframe with correlation values between all variables and 'Annual CO2 emissions (kg/py/pc)'
+# Make dataframe with correlation values between all variables and Annual CO2 emissions (kg/py/pc)
 df_plot_corr = df_plot.corr()
 df_plot_corr = df_plot_corr.sort_values('Annual CO₂ emissions (kg/py/pc)')
 df_plot_corr = df_plot_corr.reset_index()
-df_plot_corr = df_plot_corr.drop([4, 17]) # Rows for Year and Annual CO2 emissions
+df_plot_corr = df_plot_corr.drop([4, 17]) # Drop rows for Year and Annual CO2 emissions 
 df_plot_corr = df_plot_corr.drop(columns=['Year', 
                                           'Population', 
                                           'Population density', 
@@ -171,9 +175,14 @@ df_plot_corr = df_plot_corr.drop(columns=['Year',
                                           'Fossil kWh/pc', 
                                           'Agri output $', 
                                           'Food supply (kcal/pc/pd)', 
-                                          'Agricultural land (% of land area)']) # To only keep the column for Annual CO2 emissions
+                                          'Agricultural land (% of land area)']) # To keep the column for Annual CO2 emissions only
 df_plot_corr = df_plot_corr.rename(columns = {'index':'Variable', 
-                                    'Annual CO₂ emissions (kg/py/pc)': 'Correlation coefficient between variable and Annual CO₂ emissions (kg/py/pc)'})
+                                              'Annual CO₂ emissions (kg/py/pc)': 'Correlation coefficient between variable and Annual CO₂ emissions (kg/py/pc)'})
+
+print('\n')
+print('Dataframe of correlation coefficients (df_plot_corr)')
+display(df_plot_corr)
+print('\n')
 
 # Make plot of the correlation between 'Annual CO₂ emissions (kg/py/pc)' and all variables
 plt.figure(figsize=(15, 5))
@@ -228,10 +237,10 @@ for df_ in df_list[1:]:
     df_co2_1 = df_co2_1.merge(df_, on=['Country', 'Year'])
 
 # Remove rows that have zero as values and calculate emission per capita (to account for the growing or shrinking population)
-df_co2_1['Annual CO₂ emissions (t/py/pc)'] = (df_co2_1['Annual CO₂ emissions (kg/py)'] / 1000) / df_co2_1['Population']
+df_co2_1['Annual CO₂ emissions (t/py/pc)'] = df_co2_1['Annual CO₂ emissions (t/py)'] / df_co2_1['Population']
 df_co2_1 = df_co2_1[(df_co2_1['Annual CO₂ emissions (t/py/pc)'] > 0)]
 
-# Make list of values containing strings to discard from dataframe(e.g. Continents, Income related, Territories)
+# Make list of values containing strings to discard from dataframe (e.g. Continents, Income related, Territories)
 # print(df_co2_1.Country.unique().tolist())
 values_to_remove = ['Africa', 
                     'Europe', 
@@ -249,15 +258,18 @@ values_to_remove = ['Africa',
                     'South America']
 df_co2_1 = df_co2_1[~df_co2_1.Country.str.match('|'.join(values_to_remove))]
 
-# # Transform the dataframe to set years as columns
+# Transform the dataframe to set years as columns
 df_co2_1 = df_co2_1.set_index(['Country', 'Year'])['Annual CO₂ emissions (t/py/pc)'].unstack()
 
-# Check for missing values
+# Check for missing values (there were missing values and they were dropped)
 # nan_count_co2 = df_co2_1.isna().sum()
 # print(f'The number of missing values in df_co2_1 is: {nan_count_co2}')
 
 # Drop rows with missing values
 df_co2_1 = df_co2_1.dropna()
+
+print('Dataframe with relevant values for calculating relative CO2 output (df_co2_1)')
+display(df_co2_1)
 
 # Add columns and fill with relative change in CO2 emissions
 df_co2_1['rel1961'] = 100
@@ -289,6 +301,8 @@ df_relco2 = df_co2_1.sort_values('rel2019').loc[:, ['rel1961',
                                                     'rel2016', 
                                                     'rel2019']]
 df_relco2 = df_relco2.round(2)
+
+print('Dataframe with relevant values for analysis of question 2 (df_relco2)')
 display(df_relco2)
 
 # Make plot
@@ -321,30 +335,32 @@ print(f'############################ Question 3: Which non-fossil fuel energy te
 df_energy_price = df_energy_price.drop(columns = 'Code')
 df_energy_price = df_energy_price.groupby(['Entity','Year'], as_index=True).first()
 df_energy_world = df_energy_price.loc['World'].reset_index()
-df_energy_world.loc[28,'Geothermal'] = (df_energy_world.loc[27,'Geothermal'] + df_energy_world.loc[29,'Geothermal']) / 2
+df_energy_world.loc[28,'Geothermal energy'] = (df_energy_world.loc[27,'Geothermal energy'] + df_energy_world.loc[29,'Geothermal energy']) / 2
+print('Dataframe with relevant values for analysis of question 3 (df_energy_world)')
 display(df_energy_world)
+print('\n')
 
 # Show plot with linear regression line for current and future (and past) years
 # Calculate linear regression (x and y are different for most columns, because not all columns have values for all years)
-x  = df_energy_world.loc[27:, 'Year'] # Bioenergy, Solar photovoltaic, Concentrated solar power, Hydropower
-x2 = df_energy_world.loc[24:, 'Year'] # Geothermal
-x3 = df_energy_world.loc[17:, 'Year'] # offshore wind
-x4 = df_energy_world.loc[:, 'Year'] # Onshore wind
+x  = df_energy_world.loc[27:, 'Year'] # Bioenergy, Solar photovoltaic power, Concentrated solar power, Hydropower
+x2 = df_energy_world.loc[24:, 'Year'] # Geothermal energy
+x3 = df_energy_world.loc[17:, 'Year'] # offshore wind power
+x4 = df_energy_world.loc[:, 'Year'] # Onshore wind power
 
 y1 = df_energy_world.loc[27:, 'Bioenergy']
-y2 = df_energy_world.loc[24:, 'Geothermal']
-y3 = df_energy_world.loc[27:, 'Solar photovoltaic']
+y2 = df_energy_world.loc[24:, 'Geothermal energy']
+y3 = df_energy_world.loc[27:, 'Solar photovoltaic power']
 y4 = df_energy_world.loc[27:, 'Concentrated solar power']
-y5 = df_energy_world.loc[17:, 'Offshore wind']
-y6 = df_energy_world.loc[:, 'Onshore wind']
+y5 = df_energy_world.loc[17:, 'Offshore wind power']
+y6 = df_energy_world.loc[:, 'Onshore wind power']
 y7 = df_energy_world.loc[27:, 'Hydropower']
 
 reg1 = np.polyfit(x , y1, deg=1) # Bioenergy
-reg2 = np.polyfit(x2, y2, deg=1) # Geothermal
-reg3 = np.polyfit(x , y3, deg=1) # Solar photovoltaic
+reg2 = np.polyfit(x2, y2, deg=1) # Geothermal energy
+reg3 = np.polyfit(x , y3, deg=1) # Solar photovoltaic power
 reg4 = np.polyfit(x , y4, deg=1) # Concentrated solar power
-reg5 = np.polyfit(x3, y5, deg=1) # Offshore wind
-reg6 = np.polyfit(x4, y6, deg=1) # Onshore wind
+reg5 = np.polyfit(x3, y5, deg=1) # Offshore wind power
+reg6 = np.polyfit(x4, y6, deg=1) # Onshore wind power
 reg7 = np.polyfit(x , y7, deg=1) # Hydropower
 
 # create plots
@@ -352,21 +368,21 @@ plt.figure(figsize=(35, 10))
 
 # Create scatter for current values
 plt.scatter(x , y1, c='red', label='Bioenergy')
-plt.scatter(x2, y2, c='grey', label='Geothermal')
-plt.scatter(x , y3, c='green', label='Solar photovoltaic')
+plt.scatter(x2, y2, c='grey', label='Geothermal energy')
+plt.scatter(x , y3, c='green', label='Solar photovoltaic power')
 plt.scatter(x , y4, c='limegreen', label='Concentrated solar power')
-plt.scatter(x3, y5, c='fuchsia', label='Offshore wind')
-plt.scatter(x4, y6, c='purple', label='Onshore wind')
+plt.scatter(x3, y5, c='fuchsia', label='Offshore wind power')
+plt.scatter(x4, y6, c='purple', label='Onshore wind power')
 plt.scatter(x , y7, c='blue', label='Hydropower')
 
 # Create linear regression line for future values with same set of colors as scatterplot of current values
 xn = np.linspace(1983, 2050, 68) 
 plt.plot(xn, np.polyval(reg1, xn), c='red', label='Bioenergy')
-plt.plot(xn, np.polyval(reg2, xn), c='grey', label='Geothermal')
-plt.plot(xn, np.polyval(reg3, xn), c='green', label='Solar photovoltaic')
+plt.plot(xn, np.polyval(reg2, xn), c='grey', label='Geothermal energy')
+plt.plot(xn, np.polyval(reg3, xn), c='green', label='Solar photovoltaic power')
 plt.plot(xn, np.polyval(reg4, xn), c='limegreen', label='Concentrated solar power')
-plt.plot(xn, np.polyval(reg5, xn), c='fuchsia', label='Offshore wind')
-plt.plot(xn, np.polyval(reg6, xn), c='purple', label='Onshore wind')
+plt.plot(xn, np.polyval(reg5, xn), c='fuchsia', label='Offshore wind power')
+plt.plot(xn, np.polyval(reg6, xn), c='purple', label='Onshore wind power')
 plt.plot(xn, np.polyval(reg7, xn), c='blue', label='Hydropower')
 
 plt.yticks(np.arange(-0.05, 0.45, step=0.05))
