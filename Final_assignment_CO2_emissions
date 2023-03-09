@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy.polynomial.polynomial as poly
 
-pd.reset_option('^display.', silent=True)
 # Make a usable dataframe of all dataframes
 base_url = 'https://raw.githubusercontent.com/Twoltinge/Data/main/'
 
